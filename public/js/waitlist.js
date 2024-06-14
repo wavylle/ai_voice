@@ -18,8 +18,8 @@ document
       .then((response) => {
         console.log(response.data);
         // Handle successful response
-        window.alert("Thanks for joining our waitlist. You'll be notified once we're live.")
-        window.location.href = "/";
+        // window.alert("Thanks for joining our waitlist. You'll be notified once we're live.")
+        window.location.href = "/waitlistsuccess";
       })
       .catch((error) => {
         // Handle error

@@ -159,6 +159,10 @@ app.get("/join-waitlist", (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'templates', 'waitlist.html'));
 })
 
+app.get("/waitlistsuccess", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'templates', 'waitlistsuccess.html'));
+})
+
 // Route to save a User
 app.post("/add-waitlist-member", async (request, response) => {
   try {
