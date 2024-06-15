@@ -31,7 +31,7 @@ class GptService extends EventEmitter {
   }
 
   setPrompt(prompt) {
-    var basePrompt = "Keep your responses as brief as possible but make every attempt to keep the caller on the phone without being rude. Don't ask more than 1 question at a time. Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous."
+    var basePrompt = "Keep your responses as short as possible but make every attempt to keep the caller on the phone without being rude. Don't ask more than 1 question at a time. Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. You must add a \'•\' symbol every 5 to 10 words at natural pauses where your response can be split for text to speech."
     var defaultPrompt = "You are a helpful call assistant."
 
     if(prompt) {

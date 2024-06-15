@@ -228,7 +228,6 @@ expressWs.app.ws('/connection', (ws, req) => {
       callSid = msg.start.callSid;
       streamService.setStreamSid(streamSid);
       gptService.setCallSid(callSid);
-      socketService.setStreamSid(streamSid);
       console.log(`Twilio -> Starting Media Stream for ${streamSid}`.underline.red);
 
       // setTimeout(() => {
@@ -242,6 +241,7 @@ expressWs.app.ws('/connection', (ws, req) => {
       const label = msg.mark.name;
       console.log(`Twilio -> Audio completed mark (${msg.sequenceNumber}): ${label}`.red);
       marks = marks.filter(m => m !== msg.mark.name);
+      socketService.setStreamSid(streamSid);
     } else if (msg.event === 'stop') {
       console.log(`Twilio -> Media stream ${streamSid} ended.`.underline.red);
     }
