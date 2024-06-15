@@ -34,8 +34,22 @@ class TextToSpeechService extends EventEmitter {
           }),
         }
       );
-      const audioArrayBuffer = await response.arrayBuffer();
-      this.emit('speech', partialResponseIndex, Buffer.from(audioArrayBuffer).toString('base64'), partialResponse, interactionCount);
+
+      if (response.status === 200) {
+        try {
+          const blob = await response.blob();
+          const audioArrayBuffer = await blob.arrayBuffer();
+          const base64String = Buffer.from(audioArrayBuffer).toString('base64');
+          this.emit('speech', partialResponseIndex, base64String, partialResponse, interactionCount);
+        } catch (err) {
+          console.log(err);
+        }
+      } else {
+        console.log('Deepgram TTS error:');
+        console.log(response);
+      }
+      // const audioArrayBuffer = await response.arrayBuffer();
+      // this.emit('speech', partialResponseIndex, Buffer.from(audioArrayBuffer).toString('base64'), partialResponse, interactionCount);
     } catch (err) {
       console.error('Error occurred in TextToSpeech service');
       console.error(err);
