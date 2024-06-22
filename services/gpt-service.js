@@ -16,9 +16,10 @@ class GptService extends EventEmitter {
   constructor() {
     super();
     this.openai = new OpenAI();
+    // this.userContext = {},
     this.userContext = [
-      { 'role': 'system', 'content': "" },
-      { 'role': 'assistant', 'content': "Hey, how can I assist you?" },
+      { 'role': 'system', 'content': '' },
+      { 'role': 'assistant', 'content': 'Hello! I understand you\'re looking for a pair of AirPods, is that correct?' },
     ],
     this.partialResponseIndex = 0;
   }
@@ -26,17 +27,26 @@ class GptService extends EventEmitter {
   // Add the callSid to the chat context in case
   // ChatGPT decides to transfer the call.
   setCallSid (callSid) {
-    this.userContext.push({ 'role': 'system', 'content': `callSid: ${callSid}` });
+    // this.userContext[callSid].push({ 'role': 'system', 'content': `callSid: ${callSid}` });
     console.log("GPT Service call SID: ", callSid)
   }
 
-  setPrompt(prompt) {
+  setPrompt(callSid, prompt) {
+    var initialMessage = "Hey, how can I assist you?"
     var basePrompt = "Keep your responses as short as possible but make every attempt to keep the caller on the phone without being rude. Don't ask more than 1 question at a time. Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. You must add a \'•\' symbol every 5 to 10 words at natural pauses where your response can be split for text to speech."
     var defaultPrompt = "You are a helpful call assistant."
 
     if(prompt) {
+      // this.userContext = {callSid: [
+      //   { 'role': 'system', 'content': prompt + basePrompt },
+      //   { 'role': 'assistant', 'content': initialMessage },
+      // ]}
       this.userContext[0].content = prompt + basePrompt
     } else {
+      // this.userContext = {callSid: [
+      //   { 'role': 'system', 'content': defaultPrompt + basePrompt },
+      //   { 'role': 'assistant', 'content': initialMessage },
+      // ]}
       this.userContext[0].content = defaultPrompt + basePrompt
     }
   }

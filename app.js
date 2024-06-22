@@ -16,6 +16,11 @@ const { TranscriptionService } = require('./services/transcription-service');
 const { TextToSpeechService } = require('./services/tts-service');
 const {TextToSpeechWebSocket} = require("./services/tts-socket")
 const waitlistDB = require("./models/waitlistModel");
+const {randomBytes} = require("crypto")
+
+const generateToken = () => {
+  return randomBytes(20).toString("hex");
+};
 
 const MongoDBSessionStore = require("connect-mongodb-session");
 var mongourl = process.env.MONGODB_URL;
@@ -72,7 +77,7 @@ function makeACall(toNumber) {
   const calls = client.calls.create({
     twiml: `<Response>
     <Connect>
-    <Stream url="wss://${process.env.SERVER}/connection" />
+    <Stream url="wss://${process.env.SERVER}/connection/${generateToken()}" />
   </Connect>
   </Response>`,
   to: toNumber,
@@ -80,6 +85,7 @@ function makeACall(toNumber) {
   record: true
 });
 console.log("Call successfully made: ", calls)
+return calls
 }
 
 // makeACall(process.env.YOUR_NUMBER)
@@ -114,10 +120,11 @@ app.post("/set_prompt", async (req, res) => {
     console.error("Error inserting data:", error);
   }
 
-  // Setting the GPT prompt
-  gptService.setPrompt(prompt)
-
-  await makeACall(phone)
+  // Making a call and setting the GPT prompt  
+  const callSid = await makeACall(phone)
+  // console.log(callSid)
+  
+  gptService.setPrompt(callSid.sid, prompt)
 
   res.send(true)
 })
@@ -205,8 +212,9 @@ app.get("/deleteallwaitlistmembers", async (request, response) => {
 
 app.engine('html', require('ejs').renderFile);
 
-expressWs.app.ws('/connection', (ws, req) => {
-  console.log("Connected...")
+expressWs.app.ws('/connection/:hashkey', (ws, req) => {
+  const hashkey = req.params.hashkey;
+  console.log(`Connected for hash: ${hashkey}`)
   ws.on('error', console.error);
   // Filled in from start message
   let streamSid;
