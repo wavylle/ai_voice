@@ -17,10 +17,10 @@ class GptService extends EventEmitter {
     super();
     this.openai = new OpenAI();
     // this.userContext = {},
-    this.userContext = [
-      { 'role': 'system', 'content': '' },
-      { 'role': 'assistant', 'content': 'Hello! I understand you\'re looking for a pair of AirPods, is that correct?' },
-    ],
+    // this.userContext = [
+    //   { 'role': 'system', 'content': '' },
+    //   { 'role': 'assistant', 'content': 'Hello! I understand you\'re looking for a pair of AirPods, is that correct?' },
+    // ],
     this.partialResponseIndex = 0;
   }
 
@@ -31,25 +31,30 @@ class GptService extends EventEmitter {
     console.log("GPT Service call SID: ", callSid)
   }
 
-  setPrompt(callSid, prompt) {
+  setPrompt(callSessionId, prompt) {
     var initialMessage = "Hey, how can I assist you?"
-    var basePrompt = "Keep your responses as short as possible but make every attempt to keep the caller on the phone without being rude. Don't ask more than 1 question at a time. Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. You must add a \'•\' symbol every 5 to 10 words at natural pauses where your response can be split for text to speech."
+    var basePrompt = "Keep your responses as short as possible but make every attempt to keep the caller on the phone without being rude. Don't ask more than 1 question at a time. Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous. You must add a '•' symbol every 5 to 10 words at natural pauses where your response can be split for text to speech."
     var defaultPrompt = "You are a helpful call assistant."
 
-    if(prompt) {
-      // this.userContext = {callSid: [
-      //   { 'role': 'system', 'content': prompt + basePrompt },
-      //   { 'role': 'assistant', 'content': initialMessage },
-      // ]}
-      this.userContext[0].content = prompt + basePrompt
+    console.log("Call Session ID 2: ", callSessionId)
+
+    if (prompt) {
+        this.userContext = {};
+        this.userContext[callSessionId] = [
+            { 'role': 'system', 'content': prompt + basePrompt },
+            { 'role': 'assistant', 'content': initialMessage },
+        ];
     } else {
-      // this.userContext = {callSid: [
-      //   { 'role': 'system', 'content': defaultPrompt + basePrompt },
-      //   { 'role': 'assistant', 'content': initialMessage },
-      // ]}
-      this.userContext[0].content = defaultPrompt + basePrompt
+        this.userContext = {};
+        this.userContext[callSessionId] = [
+            { 'role': 'system', 'content': defaultPrompt + basePrompt },
+            { 'role': 'assistant', 'content': initialMessage },
+        ];
     }
-  }
+
+    console.log("UserContext: ", this.userContext)
+}
+
 
   validateFunctionArgs (args) {
     try {
@@ -63,16 +68,20 @@ class GptService extends EventEmitter {
     }
   }
 
-  updateUserContext(name, role, text) {
+  updateUserContext(name, role, text, callSessionId) {
+
+    console.log("Call Session ID 1: ", callSessionId)
     if (name !== 'user') {
-      this.userContext.push({ 'role': role, 'name': name, 'content': text });
+      this.userContext[callSessionId].push({ 'role': role, 'name': name, 'content': text });
     } else {
-      this.userContext.push({ 'role': role, 'content': text });
+      console.log(this.userContext)
+      this.userContext[callSessionId].push({ 'role': role, 'content': text });
     }
   }
 
-  async completion(text, interactionCount, socketService, role = 'user', name = 'user') {
-    this.updateUserContext(name, role, text);
+  async completion(callSessionId, text, interactionCount, socketService, role = 'user', name = 'user') {
+    console.log("Call Session ID 1: ", callSessionId)
+    this.updateUserContext(name, role, text, callSessionId);
 
     // Usage
     socketService.connect();
@@ -81,7 +90,7 @@ class GptService extends EventEmitter {
     // Step 1: Send user transcription to Chat GPT
     const stream = await this.openai.chat.completions.create({
       model: 'gpt-4-1106-preview',
-      messages: this.userContext,
+      messages: this.userContext[callSessionId],
       // tools: tools,
       stream: true,
       max_tokens: 300
@@ -120,7 +129,7 @@ class GptService extends EventEmitter {
         }
     socketService.sendData(completeResponse)
     socketService.sendEosData()
-    this.userContext.push({'role': 'assistant', 'content': completeResponse});
+    this.userContext[callSessionId].push({'role': 'assistant', 'content': completeResponse});
     console.log(`GPT -> user context length: ${this.userContext.length}`.green);
     console.log(`GPT -> response: ${completeResponse} | ${new Date().toLocaleString()}`.red);
   }

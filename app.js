@@ -73,11 +73,12 @@ const PORT = process.env.PORT || 3000;
 
 // // Make a call
 function makeACall(toNumber) {
+  const callSessionId = generateToken()
   console.log("Making a call")
   const calls = client.calls.create({
     twiml: `<Response>
     <Connect>
-    <Stream url="wss://${process.env.SERVER}/connection/${generateToken()}" />
+    <Stream url="wss://${process.env.SERVER}/connection/${callSessionId}" />
   </Connect>
   </Response>`,
   to: toNumber,
@@ -85,7 +86,7 @@ function makeACall(toNumber) {
   record: true
 });
 console.log("Call successfully made: ", calls)
-return calls
+return callSessionId
 }
 
 // makeACall(process.env.YOUR_NUMBER)
@@ -121,10 +122,10 @@ app.post("/set_prompt", async (req, res) => {
   }
 
   // Making a call and setting the GPT prompt  
-  const callSid = await makeACall(phone)
+  const callSessionId = await makeACall(phone)
   // console.log(callSid)
   
-  gptService.setPrompt(callSid.sid, prompt)
+  gptService.setPrompt(callSessionId, prompt)
 
   res.send(true)
 })
@@ -274,7 +275,8 @@ expressWs.app.ws('/connection/:hashkey', (ws, req) => {
   transcriptionService.on('transcription', async (text) => {
     if (!text) { return; }
     console.log(`Interaction ${interactionCount} – STT -> GPT: ${text} | ${new Date().toLocaleString()}`.yellow);
-    gptService.completion(text, interactionCount, socketService);
+    console.log("Hash Key: ", hashkey)
+    gptService.completion(hashkey, text, interactionCount, socketService);
     interactionCount += 1;
   });
   
@@ -290,6 +292,7 @@ expressWs.app.ws('/connection/:hashkey', (ws, req) => {
   });
 
   streamService.on('audiosent', (markLabel) => {
+    console.log("Stream service mark")
     marks.push(markLabel);
   });
 
