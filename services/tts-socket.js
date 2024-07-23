@@ -45,7 +45,7 @@ class TextToSpeechWebSocket extends EventEmitter {
   }
 
   sendEosData() {
-    console.log("Sending EOS message...")
+    // console.log("Sending EOS message...")
     const eosMessage = {
       "text": ""
     };
@@ -83,7 +83,7 @@ class TextToSpeechWebSocket extends EventEmitter {
 
       this.buffer(null, Buffer.from(arrayBuffer).toString('base64'))
 
-      console.log("Received audio chunk");
+      // console.log("Received audio chunk");
     } else {
       console.log("No audio data in the response");
     }
@@ -112,7 +112,7 @@ class TextToSpeechWebSocket extends EventEmitter {
   }
 
   buffer(index, audio) {
-    console.log("In Buffer...");
+    // console.log("In Buffer...");
     // Escape hatch for intro message, which doesn't have an index
     if (index === null) {
       this.sendAudio(audio);
