@@ -136,6 +136,7 @@ class TextToSpeechWebSocket extends EventEmitter {
   }
 
   sendAudio(audio) {
+    // console.log("Audio to send: ", audio)
     // console.log("Sending Audio...")
     // console.log(this.streamSid)
     // if (this.myws.readyState === WebSocket.OPEN) {
